@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Technician Dashboard</title>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:"Segoe UI",Arial;
+  background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+  color:#fff;
+}
+header{
+  background:#fff;
+  color:#203a43;
+  padding:15px 25px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 4px 8px rgba(0,0,0,0.1);
+}
+header h2{margin:0;}
+header span{font-size:14px;font-weight:bold;}
+header button{
+  background:#e74c3c;
+  border:none;
+  color:white;
+  padding:8px 14px;
+  border-radius:5px;
+  cursor:pointer;
+}
+
+.container{padding:25px; max-width:1100px; margin:auto;}
+
+.tabs{
+  margin-bottom:20px;
+}
+.tab-btn{
+  padding:8px 14px;
+  margin-right:8px;
+  border-radius:6px;
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
+}
+.tab-btn.active{
+  background:#27ae60;
+  color:white;
+}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+.job-card{
+  background:#fff;
+  color:#203a43;
+  border-radius:10px;
+  padding:15px;
+  margin-bottom:15px;
+  box-shadow:0 3px 12px rgba(0,0,0,0.15);
+}
+.job-card h4{margin:0 0 8px 0;}
+.job-card p{margin:4px 0; font-size:14px;}
+
+.status{
+  padding:4px 8px;
+  border-radius:12px;
+  font-size:12px;
+  font-weight:bold;
+  text-transform:capitalize;
+}
+.status.pending{ background:#f39c12;color:#fff; }
+.status.accepted{ background:#27ae60;color:#fff; }
+.status.completed{ background:#2980b9;color:#fff; }
+
+button.accept, button.reject, button.complete{
+  padding:6px 12px;
+  border:none;
+  border-radius:6px;
+  margin-top:8px;
+  margin-right:6px;
+  cursor:pointer;
+  font-weight:bold;
+  transition:0.2s;
+}
+button.accept{ background:#27ae60; color:#fff;}
+button.accept:hover{ background:#219150;}
+button.reject{ background:#e74c3c; color:#fff;}
+button.reject:hover{ background:#c0392b;}
+button.complete{ background:#2980b9; color:#fff;}
+button.complete:hover{ background:#21618c;}
+
+.earnings-section{
+  background:#fff;
+  color:#203a43;
+  border-radius:10px;
+  padding:12px;
+  margin-bottom:20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.earnings-section select{
+  padding:6px 10px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+
+@media(max-width:768px){
+  header{flex-direction:column;align-items:flex-start;gap:10px;}
+  .tab-btn{margin-bottom:6px;}
+  button.accept, button.reject, button.complete{width:48%; margin-right:2%;}
+} 
+</style>
+</head>
+<body>
+
+<header>
+  <h2>Technician Dashboard</h2>
+  <span id="techEmailDisplay"></span>
+  <button onclick="logout()">Logout</button>
+</header>
+
+<div class="container">
+
+  <!-- Earnings Display -->
+  <div class="earnings-section">
+    <div><strong>Technician Earnings:</strong> <span id="earningsDisplay">$0.00</span></div>
+    <div><strong>Admin Share:</strong> <span id="adminShareDisplay">$0.00</span></div>
+    <select id="earningPeriod" onchange="loadEarnings(); loadAdminShare();">
+      <option value="daily">Today</option>
+      <option value="weekly">This Week</option>
+      <option value="monthly">This Month</option>
+    </select>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('assignedJobsTab')">Jobs</button>
+    <button class="tab-btn" onclick="showTab('acceptedJobsTab')">Accepted Jobs</button>
+    <button class="tab-btn" onclick="showTab('completedJobsTab')">Completed Jobs</button>
+  </div>
+
+  <!-- Job Tabs -->
+  <div id="assignedJobsTab" class="tab-content active">
+    <div id="assignedJobs"></div>
+  </div>
+
+  <div id="acceptedJobsTab" class="tab-content">
+    <div id="acceptedJobs"></div>
+  </div>
+
+  <div id="completedJobsTab" class="tab-content">
+    <div id="completedJobs"></div>
+  </div>
+</div>
+
+<script>
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyAGjRba9QmovE8MSlvJTPSkKp7OsdbiqBw",
+  authDomain: "service-booking-app-56dea.firebaseapp.com",
+  projectId: "service-booking-app-56dea",
+  storageBucket: "service-booking-app-56dea.appspot.com",
+  messagingSenderId: "524636158231",
+  appId: "1:524636158231:web:f5c22b993a23d0b4b21f52"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let currentUserEmail = "";
+let currentUserDistrict = "";
+
+firebase.auth().onAuthStateChanged(async user=>{
+  if(!user){ window.location.href="../login.html"; return; }
+  currentUserEmail = user.email.trim().toLowerCase();
+  document.getElementById("techEmailDisplay").innerText = currentUserEmail;
+
+  const userDoc = await db.collection("users").doc(user.uid).get();
+  const userData = userDoc.data() || {};
+  currentUserDistrict = userData.district || "";
+  loadJobs();
+  loadEarnings();
+  loadAdminShare();
+});
+
+function logout(){
+  firebase.auth().signOut().then(()=>window.location.href="../login.html");
+}
+
+function showTab(tabId){
+  document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+
+  document.querySelectorAll('.tab-btn').forEach(btn=>btn.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+}
+
+// Accept / Reject Job
+async function respondJob(jobId, response) {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  if (response === "accepted" && !confirm("Accept this job?")) return;
+
+  const jobRef = db.collection("jobs").doc(jobId);
+  const jobSnap = await jobRef.get();
+  if(!jobSnap.exists) return;
+
+  const jobData = jobSnap.data();
+  const price = Number(jobData.price) || 0;
+
+  let updateObj = {
+    status: response,
+    technician: currentUserEmail
+  };
+
+  if (response === "accepted") {
+    updateObj.assignedAt = firebase.firestore.FieldValue.serverTimestamp();
+  }
+
+  await jobRef.update(updateObj);
+
+  if(response === "accepted"){
+    const techRef = db.collection("users").doc(user.uid);
+
+    // ✅ Fixed: Increment adminDue and earnings
+    await techRef.update({
+      earnings: {
+        daily: firebase.firestore.FieldValue.increment(price * 0.9),
+        weekly: firebase.firestore.FieldValue.increment(price * 0.9),
+        monthly: firebase.firestore.FieldValue.increment(price * 0.9)
+      },
+      adminDue: firebase.firestore.FieldValue.increment(price * 0.1)
+    });
+
+    loadEarnings();
+    loadAdminShare();
+    showTab('acceptedJobsTab');
+  }
+
+  loadJobs();
+}
+
+// Complete Job
+function completeJob(jobId){
+  if(!confirm("Mark this job as completed?")) return;
+  db.collection("jobs").doc(jobId).update({
+    status:"completed",
+    completedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(()=>loadJobs()).catch(err=>alert(err.message));
+}
+
+async function loadJobs() {
+  const assignedContainer = document.getElementById("assignedJobs");
+  const acceptedContainer = document.getElementById("acceptedJobs");
+  const completedContainer = document.getElementById("completedJobs");
+
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  const userDoc = await db.collection("users").doc(user.uid).get();
+  if (!userDoc.exists) return;
+
+  const techData = userDoc.data();
+  const currentUserEmail = user.email.toLowerCase();
+  //const currentUserDistrict = techData.district || "";
+
+  // ❌ If technician is blocked, stop
+  if (techData.blocked) {
+    assignedContainer.innerHTML = "<p class='job-card'>You are blocked by admin. Cannot view jobs.</p>";
+    acceptedContainer.innerHTML = "<p class='job-card'>You are blocked by admin. Cannot view jobs.</p>";
+    completedContainer.innerHTML = "<p class='job-card'>You are blocked by admin. Cannot view jobs.</p>";
+    return;
+  }
+
+  // =========================
+  // Assigned jobs (pending)
+  // =========================
+  db.collection("jobs")
+    .where("status", "==", "pending")
+    .onSnapshot(async snapshot => {
+      assignedContainer.innerHTML = "";
+
+      let jobsToShow = [];
+
+      for (const doc of snapshot.docs) {
+        const job = doc.data();
+
+        // ✅ Filter by district
+        if (job.district !== currentUserDistrict) continue;
+
+        // ✅ Skip if assigned to a blocked technician
+        if (job.technicianUid) {
+          const assignedTechDoc = await db.collection("users").doc(job.technicianUid).get();
+          if (assignedTechDoc.exists && assignedTechDoc.data().blocked) continue;
+        }
+
+        jobsToShow.push({ id: doc.id, ...job });
+      }
+
+      if (jobsToShow.length === 0) {
+        assignedContainer.innerHTML = "<p class='job-card'>No jobs available.</p>";
+        return;
+      }
+
+      jobsToShow.forEach(job => {
+        let createdOn = job.createdAt?.toDate?.() ? job.createdAt.toDate().toLocaleString() : "-";
+        const div = document.createElement("div");
+        div.className = "job-card";
+        div.innerHTML = `
+          <h4>Service: ${job.title}</h4>
+          <p><b>District:</b> ${job.district}</p>
+          <p><strong>Address:</strong> ${job.address}</p>
+          <p><strong>Price:</strong> $${job.price}</p>
+          <p><strong>Status:</strong> <span class="status pending">Pending</span></p>
+          <p><strong>Created On:</strong> ${createdOn}</p>
+          <button onclick="respondJob('${job.id}','accepted')" class="accept">Accept</button>
+          
+        `;
+        assignedContainer.appendChild(div);
+      });
+    });
+
+  // =========================
+  // Accepted jobs
+  // =========================
+  db.collection("jobs")
+    .where("technician", "==", currentUserEmail)
+    .where("status", "==", "accepted")
+    .onSnapshot(snapshot => {
+      acceptedContainer.innerHTML = "";
+
+      if (snapshot.empty) {
+        acceptedContainer.innerHTML = "<p class='job-card'>No accepted jobs.</p>";
+        return;
+      }
+
+      snapshot.docs.forEach(doc => {
+        const job = doc.data();
+        const div = document.createElement("div");
+        div.className = "job-card";
+        let assignedOn = job.assignedAt?.toDate?.() ? job.assignedAt.toDate().toLocaleString() : "-";
+        div.innerHTML = `
+          <h4>Service: ${job.title}</h4>
+          <p><b>District:</b> ${job.district}</p>
+          <p><strong>Address:</strong> ${job.address}</p>
+          <p><strong>Price:</strong> $${job.price}</p>
+          <p><strong>Status:</strong> <span class="status accepted">Accepted</span></p>
+          <p><strong>Assigned On:</strong> ${assignedOn}</p>
+          <button onclick="completeJob('${doc.id}')" class="complete">Mark as Completed</button>
+        `;
+        acceptedContainer.appendChild(div);
+      });
+    });
+
+  // =========================
+  // Completed jobs
+  // =========================
+  db.collection("jobs")
+    .where("technician", "==", currentUserEmail)
+    .where("status", "==", "completed")
+    .onSnapshot(snapshot => {
+      completedContainer.innerHTML = "";
+
+      if (snapshot.empty) {
+        completedContainer.innerHTML = "<p class='job-card'>No completed jobs.</p>";
+        return;
+      }
+
+      snapshot.docs.forEach(doc => {
+        const job = doc.data();
+        const div = document.createElement("div");
+        div.className = "job-card";
+        let assignedOn = job.assignedAt?.toDate?.() ? job.assignedAt.toDate().toLocaleString() : "-";
+        let completedOn = job.completedAt?.toDate?.() ? job.completedAt.toDate().toLocaleString() : "-";
+        div.innerHTML = `
+          <h4>Service: ${job.title}</h4>
+          <p><b>District:</b> ${job.district}</p>
+          <p><strong>Address:</strong> ${job.address}</p>
+          <p><strong>Price:</strong> $${job.price}</p>
+          <p><strong>Status:</strong> <span class="status completed">Completed</span></p>
+          <p><strong>Assigned On:</strong> ${assignedOn}</p>
+          <p><strong>Completed On:</strong> ${completedOn}</p>
+        `;
+        completedContainer.appendChild(div);
+      });
+    });
+}
+
+
+// Load Earnings
+async function loadEarnings(){
+  const user = firebase.auth().currentUser;
+  if(!user) return;
+  const period = document.getElementById("earningPeriod").value;
+  try{
+    const snap = await db.collection("users").doc(user.uid).get();
+    const data = snap.data() || {};
+    const earnings = data.earnings || {};
+    const amount = earnings[period] || 0;
+    document.getElementById("earningsDisplay").innerText = "₨" + Number(amount).toFixed(2);
+  }catch(err){
+    console.error(err);
+    document.getElementById("earningsDisplay").innerText = "₨0.00";
+  }
+}
+
+// Load Admin Share for current user only
+async function loadAdminShare(){
+  const user = firebase.auth().currentUser;
+  if(!user) return;
+
+  const period = document.getElementById("earningPeriod").value;
+
+  try {
+    // Current user's document
+    const snap = await db.collection("users").doc(user.uid).get();
+    const data = snap.data() || {};
+
+    // Get adminDue for current user
+    let adminDue = data.adminDue || 0;
+
+    document.getElementById("adminShareDisplay").innerText = "₨" + Number(adminDue).toFixed(2);
+
+  } catch(err) {
+    console.error(err);
+    document.getElementById("adminShareDisplay").innerText = "₨0.00";
+  }
+}
+
+</script>
+</body>
+</html>

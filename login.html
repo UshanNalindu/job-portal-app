@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Service Booking | Login</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;height:100vh;display:flex;justify-content:center;align-items:center;
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+  background:
+    radial-gradient(circle at top left,#1d4ed8,transparent 40%),
+    radial-gradient(circle at bottom right,#0f766e,transparent 40%),
+    #020617;
+  color:#e5e7eb;
+}
+.card{
+  width:420px;padding:32px 30px;border-radius:16px;
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,0.15);
+  box-shadow:0 25px 60px rgba(0,0,0,.45);
+}
+h2{text-align:center;margin-bottom:20px}
+
+input,select{
+  width:100%;padding:12px 14px;margin-bottom:14px;
+  border-radius:10px;border:1px solid rgba(255,255,255,.2);
+  background:rgba(2,6,23,.6);
+  color:#e5e7eb;font-size:14px;
+}
+
+.password-box{
+  position:relative;
+}
+.password-box span{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  cursor:pointer;
+  font-size:13px;
+  color:#38bdf8;
+}
+
+button{
+  width:100%;padding:12px;border:none;border-radius:10px;
+  font-size:15px;font-weight:600;cursor:pointer;
+  background:linear-gradient(135deg,#38bdf8,#2563eb);
+  color:#020617;
+}
+
+.switch{text-align:center;margin-top:14px;font-size:13px;color:#9ca3af}
+.switch span{color:#38bdf8;font-weight:600;cursor:pointer}
+#msg{text-align:center;margin-top:12px;font-size:13px}
+.hidden{display:none}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<!-- LOGIN -->
+<div id="loginBox">
+  <h2>Sign In</h2>
+  <input id="loginEmail" placeholder="Email">
+  <div class="password-box">
+    <input id="loginPassword" type="password" placeholder="Password">
+    <span onclick="togglePass('loginPassword',this)">Show</span>
+  </div>
+  <button id="loginBtn">Login</button>
+  <div class="switch">No account? <span id="toRegister">Create one</span></div>
+</div>
+
+<!-- REGISTER -->
+<div id="registerBox" class="hidden">
+  <h2>Create Technician Account</h2>
+
+  <input id="regName" placeholder="Full name">
+  <input id="regEmail" placeholder="Email">
+
+  <div class="password-box">
+    <input id="regPassword" type="password" placeholder="Password">
+    <span onclick="togglePass('regPassword',this)">Show</span>
+  </div>
+
+  <input id="regPhone" placeholder="Phone number">
+
+  <!-- District dropdown (scrollable) -->
+  <select id="regDistrict">
+    <option value="">Select District</option>
+    <option>Colombo</option>
+    <option>Gampaha</option>
+    <option>Kalutara</option>
+    <option>Kandy</option>
+    <option>Matale</option>
+    <option>Nuwara Eliya</option>
+    <option>Galle</option>
+    <option>Matara</option>
+    <option>Hambantota</option>
+    <option>Jaffna</option>
+    <option>Kilinochchi</option>
+    <option>Mannar</option>
+    <option>Vavuniya</option>
+    <option>Mullaitivu</option>
+    <option>Batticaloa</option>
+    <option>Ampara</option>
+    <option>Trincomalee</option>
+    <option>Kurunegala</option>
+    <option>Puttalam</option>
+    <option>Anuradhapura</option>
+    <option>Polonnaruwa</option>
+    <option>Badulla</option>
+    <option>Monaragala</option>
+    <option>Ratnapura</option>
+    <option>Kegalle</option>
+  </select>
+
+  <button id="registerBtn">Register</button>
+  <div class="switch">Already have account? <span id="toLogin">Sign in</span></div>
+</div>
+
+<p id="msg"></p>
+</div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { 
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAGjRba9QmovE8MSlvJTPSkKp7OsdbiqBw",
+  authDomain: "service-booking-app-56dea.firebaseapp.com",
+  projectId: "service-booking-app-56dea"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const loginBox = document.getElementById("loginBox");
+const registerBox = document.getElementById("registerBox");
+const msg = document.getElementById("msg");
+
+toRegister.onclick = ()=>{
+  loginBox.classList.add("hidden");
+  registerBox.classList.remove("hidden");
+  msg.innerText="";
+};
+toLogin.onclick = ()=>{
+  registerBox.classList.add("hidden");
+  loginBox.classList.remove("hidden");
+  msg.innerText="";
+};
+
+/* REGISTER – technician only */
+registerBtn.onclick = async ()=>{
+  try{
+    const name = regName.value.trim();
+    const email = regEmail.value.trim();
+    const password = regPassword.value;
+    const phone = regPhone.value.trim();
+    const district = regDistrict.value;
+
+    if(!name || !email || !password || !phone || !district){
+      msg.style.color="#ef4444";
+      msg.innerText="Fill all fields";
+      return;
+    }
+
+    const cred = await createUserWithEmailAndPassword(auth,email,password);
+
+    await setDoc(doc(db,"users",cred.user.uid),{
+      uid: cred.user.uid,
+      name,
+      email,
+      phone,
+      district,
+      role: "technician",
+      blocked:false,
+      adminDue:0,
+      createdAt: serverTimestamp()
+    });
+
+    msg.style.color="#22c55e";
+    msg.innerText="Technician account created";
+    registerBox.classList.add("hidden");
+    loginBox.classList.remove("hidden");
+
+  }catch(e){
+    msg.style.color="#ef4444";
+    msg.innerText=e.message;
+  }
+};
+
+/* LOGIN */
+loginBtn.onclick = async () => {
+  try {
+    const cred = await signInWithEmailAndPassword(
+      auth,
+      loginEmail.value,
+      loginPassword.value
+    );
+
+    const snap = await getDoc(doc(db, "users", cred.user.uid));
+    const user = snap.data();
+
+    if (!user) throw new Error("User not found");
+
+    // Save user info in session
+    sessionStorage.setItem("currentUser", JSON.stringify(user));
+
+    // Redirect based on role
+    if (user.role === "admin") {
+      location.href = "admin/dashboard.html";
+    } else if (user.role === "technician") {
+      location.href = "technician/dashboard.html";
+    } else {
+      msg.style.color = "#ef4444";
+      msg.innerText = "Unknown user role";
+    }
+
+  } catch (e) {
+    msg.style.color = "#ef4444";
+    msg.innerText = e.message;
+  }
+};
+
+</script>
+
+<!-- SHOW / HIDE PASSWORD -->
+<script>
+function togglePass(id,el){
+  const input = document.getElementById(id);
+  if(input.type==="password"){
+    input.type="text";
+    el.innerText="Hide";
+  }else{
+    input.type="password";
+    el.innerText="Show";
+  }
+}
+</script>
+
+</body>
+</html>
