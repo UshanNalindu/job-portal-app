@@ -146,7 +146,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // Auth
-firebase.auth().onAuthStateChanged(user=>{if(!user)window.location.href="../login.html";});
+//firebase.auth().onAuthStateChanged(user=>{if(!user)window.location.href="../login.html";});
 
 // Logout
 function logout(){firebase.auth().signOut().then(()=>window.location.href="../login.html");}
@@ -347,3 +347,4 @@ document.getElementById("registerBtn").addEventListener("click", async () => {
 </script>
 </body>
 </html>
+
