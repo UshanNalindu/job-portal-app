@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Technician Dashboard</title>
 
 <!-- Firebase SDKs -->
@@ -10,112 +12,307 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{
-  margin:0;
-  font-family:"Segoe UI",Arial;
-  background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-  color:#fff;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg-primary:#0f172a;
+  --bg-secondary:#1e293b;
+  --glass-bg:rgba(255,255,255,0.08);
+  --glass-border:rgba(255,255,255,0.12);
+
+  --primary:#3b82f6;
+  --primary-gradient:linear-gradient(135deg,#3b82f6,#6366f1);
+
+  --success:#22c55e;
+  --warning:#f59e0b;
+  --danger:#ef4444;
+  --info:#0ea5e9;
+
+  --text-light:#94a3b8;
+  --text-dark:#0f172a;
+
+  --radius-lg:20px;
+  --radius-md:14px;
+  --radius-sm:10px;
+
+  --shadow-soft:0 10px 40px rgba(0,0,0,0.25);
+  --shadow-hover:0 20px 60px rgba(0,0,0,0.35);
 }
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  font-family:'Inter',sans-serif;
+  background: radial-gradient(circle at 20% 30%,#1e293b,#0f172a 70%);
+  color:#fff;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ================= HEADER ================= */
+
 header{
-  background:#fff;
-  color:#203a43;
-  padding:15px 25px;
+  backdrop-filter:blur(18px);
+  background:var(--glass-bg);
+  border-bottom:1px solid var(--glass-border);
+  padding:22px 35px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  box-shadow:0 4px 8px rgba(0,0,0,0.1);
-}
-header h2{margin:0;}
-header span{font-size:14px;font-weight:bold;}
-header button{
-  background:#e74c3c;
-  border:none;
-  color:white;
-  padding:8px 14px;
-  border-radius:5px;
-  cursor:pointer;
+  position:sticky;
+  top:0;
+  z-index:100;
 }
 
-.container{padding:25px; max-width:1100px; margin:auto;}
+header h2{
+  font-weight:600;
+  font-size:20px;
+  letter-spacing:0.5px;
+}
+
+header span{
+  font-size:13px;
+  color:var(--text-light);
+}
+
+header button{
+  background:var(--danger);
+  border:none;
+  padding:8px 16px;
+  border-radius:var(--radius-sm);
+  color:#fff;
+  font-weight:500;
+  cursor:pointer;
+  transition:all 0.3s ease;
+}
+
+header button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 25px rgba(239,68,68,0.4);
+}
+
+/* ================= CONTAINER ================= */
+
+.container{
+  max-width:1300px;
+  margin:auto;
+  padding:40px 30px;
+}
+
+/* ================= EARNINGS ================= */
+
+.earnings-section{
+  background:var(--glass-bg);
+  backdrop-filter:blur(16px);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-lg);
+  padding:25px;
+  display:flex;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:25px;
+  margin-bottom:35px;
+  box-shadow:var(--shadow-soft);
+}
+
+.earnings-section strong{
+  font-size:13px;
+  color:var(--text-light);
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+
+.earnings-section span{
+  display:block;
+  margin-top:5px;
+  font-size:24px;
+  font-weight:700;
+  background:var(--primary-gradient);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.earnings-section select{
+  padding:10px 14px;
+  border-radius:var(--radius-sm);
+  border:none;
+  outline:none;
+  background:#fff;
+  font-weight:500;
+}
+
+/* ================= TABS ================= */
 
 .tabs{
-  margin-bottom:20px;
+  display:flex;
+  gap:15px;
+  margin-bottom:30px;
 }
+
 .tab-btn{
-  padding:8px 14px;
-  margin-right:8px;
-  border-radius:6px;
-  border:none;
+  padding:10px 20px;
+  border-radius:50px;
+  border:1px solid var(--glass-border);
+  background:var(--glass-bg);
+  color:#fff;
+  font-weight:500;
   cursor:pointer;
-  font-weight:bold;
+  transition:all 0.3s ease;
 }
+
+.tab-btn:hover{
+  background:rgba(255,255,255,0.15);
+  transform:translateY(-2px);
+}
+
 .tab-btn.active{
-  background:#27ae60;
-  color:white;
+  background:var(--primary-gradient);
+  border:none;
+  box-shadow:0 10px 30px rgba(59,130,246,0.4);
 }
+
 .tab-content{display:none;}
 .tab-content.active{display:block;}
 
-.job-card{
-  background:#fff;
-  color:#203a43;
-  border-radius:10px;
-  padding:15px;
-  margin-bottom:15px;
-  box-shadow:0 3px 12px rgba(0,0,0,0.15);
+/* ================= JOB GRID ================= */
+
+#assignedJobs,
+#acceptedJobs,
+#completedJobs{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:25px;
 }
-.job-card h4{margin:0 0 8px 0;}
-.job-card p{margin:4px 0; font-size:14px;}
+
+/* ================= JOB CARD ================= */
+
+.job-card{
+  background:var(--glass-bg);
+  backdrop-filter:blur(20px);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-lg);
+  padding:22px;
+  box-shadow:var(--shadow-soft);
+  transition:all 0.4s ease;
+  position:relative;
+  overflow:hidden;
+}
+
+.job-card::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:4px;
+  background:var(--primary-gradient);
+}
+
+.job-card:hover{
+  transform:translateY(-8px);
+  box-shadow:var(--shadow-hover);
+}
+
+.job-card h4{
+  font-size:17px;
+  font-weight:600;
+  margin-bottom:10px;
+}
+
+.job-card p{
+  font-size:13px;
+  color:var(--text-light);
+  margin-bottom:6px;
+}
+
+/* ================= STATUS BADGES ================= */
 
 .status{
-  padding:4px 8px;
-  border-radius:12px;
-  font-size:12px;
-  font-weight:bold;
-  text-transform:capitalize;
-}
-.status.pending{ background:#f39c12;color:#fff; }
-.status.accepted{ background:#27ae60;color:#fff; }
-.status.completed{ background:#2980b9;color:#fff; }
-
-button.accept, button.reject, button.complete{
   padding:6px 12px;
-  border:none;
-  border-radius:6px;
-  margin-top:8px;
-  margin-right:6px;
-  cursor:pointer;
-  font-weight:bold;
-  transition:0.2s;
+  border-radius:30px;
+  font-size:11px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  display:inline-block;
+  animation:fadeIn 0.4s ease;
 }
-button.accept{ background:#27ae60; color:#fff;}
-button.accept:hover{ background:#219150;}
-button.reject{ background:#e74c3c; color:#fff;}
-button.reject:hover{ background:#c0392b;}
-button.complete{ background:#2980b9; color:#fff;}
-button.complete:hover{ background:#21618c;}
 
-.earnings-section{
-  background:#fff;
-  color:#203a43;
-  border-radius:10px;
-  padding:12px;
-  margin-bottom:20px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
+.status.pending{background:var(--warning);color:#fff;}
+.status.accepted{background:var(--success);color:#fff;}
+.status.completed{background:var(--info);color:#fff;}
+
+/* ================= BUTTONS ================= */
+
+button.accept,
+button.complete{
+  margin-top:12px;
+  padding:9px 16px;
+  border:none;
+  border-radius:var(--radius-sm);
+  font-weight:500;
+  cursor:pointer;
+  transition:all 0.3s ease;
 }
-.earnings-section select{
-  padding:6px 10px;
-  border-radius:6px;
-  border:1px solid #ccc;
+
+button.accept{
+  background:var(--success);
+  color:#fff;
 }
+
+button.accept:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 25px rgba(34,197,94,0.4);
+}
+
+button.complete{
+  background:var(--primary);
+  color:#fff;
+}
+
+button.complete:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 25px rgba(59,130,246,0.4);
+}
+
+/* ================= ANIMATIONS ================= */
+
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(5px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+/* ================= RESPONSIVE ================= */
 
 @media(max-width:768px){
-  header{flex-direction:column;align-items:flex-start;gap:10px;}
-  .tab-btn{margin-bottom:6px;}
-  button.accept, button.reject, button.complete{width:48%; margin-right:2%;}
-} 
+  header{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:12px;
+  }
+
+  .tabs{
+    flex-direction:column;
+  }
+
+  .tab-btn{
+    width:100%;
+    text-align:center;
+  }
+
+  .earnings-section{
+    flex-direction:column;
+  }
+
+  button.accept,
+  button.complete{
+    width:100%;
+  }
+}
 </style>
 </head>
 <body>
@@ -184,6 +381,7 @@ firebase.auth().onAuthStateChanged(async user=>{
   const userDoc = await db.collection("users").doc(user.uid).get();
   const userData = userDoc.data() || {};
   currentUserDistrict = userData.district || "";
+  
   loadJobs();
   loadEarnings();
   loadAdminShare();
@@ -231,13 +429,12 @@ async function respondJob(jobId, response) {
 
     // ✅ Fixed: Increment adminDue and earnings
     await techRef.update({
-      earnings: {
-        daily: firebase.firestore.FieldValue.increment(price * 0.9),
-        weekly: firebase.firestore.FieldValue.increment(price * 0.9),
-        monthly: firebase.firestore.FieldValue.increment(price * 0.9)
-      },
-      adminDue: firebase.firestore.FieldValue.increment(price * 0.1)
-    });
+  "earnings.daily": firebase.firestore.FieldValue.increment(price * 0.9),
+  "earnings.weekly": firebase.firestore.FieldValue.increment(price * 0.9),
+  "earnings.monthly": firebase.firestore.FieldValue.increment(price * 0.9),
+  "adminDue": firebase.firestore.FieldValue.increment(price * 0.1)
+});
+
 
     loadEarnings();
     loadAdminShare();
@@ -412,27 +609,42 @@ async function loadEarnings(){
 }
 
 // Load Admin Share for current user only
-async function loadAdminShare(){
-  const user = firebase.auth().currentUser;
-  if(!user) return;
-
-  const period = document.getElementById("earningPeriod").value;
-
-  try {
-    // Current user's document
-    const snap = await db.collection("users").doc(user.uid).get();
-    const data = snap.data() || {};
-
-    // Get adminDue for current user
-    let adminDue = data.adminDue || 0;
-
-    document.getElementById("adminShareDisplay").innerText = "₨" + Number(adminDue).toFixed(2);
-
-  } catch(err) {
-    console.error(err);
-    document.getElementById("adminShareDisplay").innerText = "₨0.00";
+// Real-time listener for adminDue updates
+// Technician dashboard – listen to current user's document
+firebase.auth().onAuthStateChanged(async user=>{
+  if(!user){ 
+    window.location.href="../login.html"; 
+    return; 
   }
-}
+
+  currentUserEmail = user.email.trim().toLowerCase();
+  document.getElementById("techEmailDisplay").innerText = currentUserEmail;
+
+  const userRef = db.collection("users").doc(user.uid);
+
+  // ✅ REAL-TIME LISTENER (FIXED)
+  userRef.onSnapshot(docSnap => {
+    if(docSnap.exists){
+      const data = docSnap.data();
+      const adminDue = data.adminDue || 0;
+
+      document.getElementById("adminShareDisplay").innerText =
+        "₨" + Number(adminDue).toFixed(2);
+
+      const earnings = data.earnings || {};
+      const period = document.getElementById("earningPeriod").value;
+      const amount = earnings[period] || 0;
+
+      document.getElementById("earningsDisplay").innerText =
+        "₨" + Number(amount).toFixed(2);
+    }
+  });
+
+  loadJobs();
+});
+
+
+
 
 </script>
 </body>
