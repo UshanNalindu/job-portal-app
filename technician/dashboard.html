@@ -2,139 +2,363 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Admin Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-<style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',sans-serif}
-body{background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);color:#fff;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;padding:20px;}
-.container{width:100%;max-width:1300px;background:rgba(255,255,255,0.05);border-radius:16px;padding:25px;box-shadow:0 10px 30px rgba(0,0,0,0.5);}
-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:15px;border-bottom:1px solid rgba(255,255,255,0.2);}
-header h2{font-size:24px}
-header button{padding:8px 16px;border:none;border-radius:8px;background:#e53e3e;color:#fff;font-weight:600;cursor:pointer;transition:0.2s}
-header button:hover{background:#c53030}
-.metrics{display:flex;gap:15px;margin-top:15px;flex-wrap:wrap}
-.metric-card{padding:20px;border-radius:12px;flex:1;min-width:150px;text-align:center;box-shadow:0 5px 20px rgba(0,0,0,0.3);transition:0.3s;cursor:pointer}
-.metric-card h3{font-size:16px;color:#e2e8f0;margin-bottom:5px}
-.metric-card p{font-size:26px;font-weight:700}
-.metric-pending{background:linear-gradient(135deg,#f6ad55,#ed8936);}
-.metric-accepted{background:linear-gradient(135deg,#38a169,#2f855a);}
-.metric-tech{background:linear-gradient(135deg,#4299e1,#3182ce);}
-.metric-earning{background:linear-gradient(135deg,#805ad5,#6b46c1);}
-.metric-card:hover{transform:translateY(-5px);box-shadow:0 8px 25px rgba(0,0,0,0.5);}
-.tabs{display:flex;gap:10px;margin:20px 0;flex-wrap:wrap;}
-.tab-btn{padding:8px 20px;border-radius:20px;border:none;background:#edf2f7;color:#203a43;font-weight:500;cursor:pointer;transition:0.2s}
-.tab-btn.active{background:#38a169;color:#fff}
-.tab-content{display:none}
-.tab-content.active{display:block}
-.card{background:rgba(255,255,255,0.1);border-radius:16px;padding:20px;box-shadow:0 8px 20px rgba(0,0,0,0.3);margin-bottom:20px;}
-input, select, textarea{width:100%;padding:10px 12px;margin:8px 0;border-radius:8px;border:none;background:rgba(255,255,255,0.15);color:#fff;font-size:14px}
-input::placeholder, select, textarea{color:#e2e8f0}
-button.submit, button.assign, button.complete, button.block, button.pay, button.register{background:#3182ce;color:#fff;padding:10px 18px;border-radius:8px;border:none;font-weight:600;cursor:pointer;transition:0.2s;margin-top:5px}
-button.submit:hover, button.assign:hover, button.complete:hover, button.block:hover, button.pay:hover, button.register:hover{background:#2b6cb0}
-.job-card, .tech-card{background:#fff;color:#203a43;padding:15px;border-radius:12px;margin-bottom:15px;box-shadow:0 5px 18px rgba(0,0,0,0.25);transition:0.2s}
-.job-card:hover, .tech-card:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,0.35);}
-.job-card p, .tech-card p{margin:6px 0;font-size:14px}
-.status{display:inline-block;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:bold}
-.status.pending{background:#f6ad55;color:#fff}
-.status.accepted{background:#38a169;color:#fff}
-.status.completed{background:#805ad5;color:#fff}
-.hidden{display:none;}
-.password-box{position:relative;}
-.password-box span{position:absolute;right:10px;top:12px;cursor:pointer;}
-@media(max-width:900px){.metrics{flex-direction:column}}
-</style>
-</head>
-<body>
-<div class="container">
-<header>
-<h2>Admin Dashboard</h2>
-<button onclick="logout()">Logout</button>
-</header>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Metrics -->
-<div class="metrics">
-  <div class="metric-card metric-pending"><h3>Pending Jobs</h3><p id="pendingCount">0</p></div>
-  <div class="metric-card metric-accepted"><h3>Accepted Jobs</h3><p id="acceptedCount">0</p></div>
-  <div class="metric-card metric-tech"><h3>Technicians</h3><p id="techCount">0</p></div>
-  <div class="metric-card metric-earning"><h3>Pending Earnings</h3><p id="earningCount">0</p></div>
-</div>
+<title>Technician Dashboard</title>
 
-<div class="tabs">
-<button class="tab-btn active" onclick="showTab('addJob',this)">Add Job</button>
-<button class="tab-btn" onclick="showTab('pendingJobsTab',this)">Pending Jobs</button>
-<button class="tab-btn" onclick="showTab('assignedJobsTab',this)">Assigned Jobs</button>
-<button class="tab-btn" onclick="showTab('techniciansTab',this)">Technicians</button>
-<button class="tab-btn" onclick="showTab('earningsTab',this)">Earnings</button>
-<button class="tab-btn" onclick="showTab('registerBox',this)">Register Account</button>
-</div>
-
-<!-- ADD JOB -->
-<div id="addJob" class="tab-content active card">
-<h3>Add Job</h3>
-<input type="text" id="jobTitle" placeholder="Job Title">
-<select id="jobDistrict">
-  <option value="">Select District</option>
-  <option>Colombo</option><option>Gampaha</option><option>Kalutara</option>
-  <option>Kandy</option><option>Matale</option><option>Nuwara Eliya</option>
-  <option>Galle</option><option>Matara</option><option>Hambantota</option>
-  <option>Jaffna</option><option>Kilinochchi</option><option>Mannar</option>
-  <option>Vavuniya</option><option>Mullaitivu</option><option>Batticaloa</option>
-  <option>Ampara</option><option>Trincomalee</option><option>Kurunegala</option>
-  <option>Puttalam</option><option>Anuradhapura</option><option>Polonnaruwa</option>
-  <option>Badulla</option><option>Monaragala</option><option>Ratnapura</option><option>Kegalle</option>
-</select>
-<input type="text" id="jobAddress" placeholder="Address">
-<input type="number" id="jobPrice" placeholder="Price (LKR)">
-<textarea id="jobNote" placeholder="Additional Note"></textarea>
-<button class="submit" onclick="addJob()">Add Job</button>
-</div>
-
-<!-- PENDING JOBS -->
-<div id="pendingJobsTab" class="tab-content card"><h3>Pending Jobs</h3><div id="pendingJobsContainer"></div></div>
-
-<!-- ASSIGNED JOBS -->
-<div id="assignedJobsTab" class="tab-content card"><h3>Assigned Jobs</h3><div id="assignedJobsContainer"></div></div>
-
-<!-- TECHNICIANS -->
-<div id="techniciansTab" class="tab-content card"><h3>Technicians</h3><div id="techContainer"></div></div>
-
-<!-- EARNINGS -->
-<div id="earningsTab" class="tab-content card"><h3>Pending Earnings</h3><div id="earningsContainer"></div></div>
-
-<!-- REGISTER -->
-<div id="registerBox" class="tab-content card hidden">
-<h2>Create Account</h2>
-<input id="regName" placeholder="Full name">
-<input id="regEmail" placeholder="Email">
-<div class="password-box">
-  <input id="regPassword" type="password" placeholder="Password">
-  <span onclick="togglePass('regPassword',this)">Show</span>
-</div>
-<input id="regPhone" placeholder="Phone number">
-<select id="regDistrict">
-  <option value="">Select District</option>
-  <option>Colombo</option><option>Gampaha</option><option>Kalutara</option>
-  <option>Kandy</option><option>Matale</option><option>Nuwara Eliya</option>
-  <option>Galle</option><option>Matara</option><option>Hambantota</option>
-  <option>Jaffna</option><option>Kilinochchi</option><option>Mannar</option>
-  <option>Vavuniya</option><option>Mullaitivu</option><option>Batticaloa</option>
-  <option>Ampara</option><option>Trincomalee</option><option>Kurunegala</option>
-  <option>Puttalam</option><option>Anuradhapura</option><option>Polonnaruwa</option>
-  <option>Badulla</option><option>Monaragala</option><option>Ratnapura</option><option>Kegalle</option>
-</select>
-<select id="regRole">
-  <option value="technician">Technician</option>
-  <option value="admin">Admin</option>
-</select>
-<button class="register" id="registerBtn">Register</button>
-</div>
-
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg-primary:#0f172a;
+  --bg-secondary:#1e293b;
+  --glass-bg:rgba(255,255,255,0.08);
+  --glass-border:rgba(255,255,255,0.12);
+
+  --primary:#3b82f6;
+  --primary-gradient:linear-gradient(135deg,#3b82f6,#6366f1);
+
+  --success:#22c55e;
+  --warning:#f59e0b;
+  --danger:#ef4444;
+  --info:#0ea5e9;
+
+  --text-light:#94a3b8;
+  --text-dark:#0f172a;
+
+  --radius-lg:20px;
+  --radius-md:14px;
+  --radius-sm:10px;
+
+  --shadow-soft:0 10px 40px rgba(0,0,0,0.25);
+  --shadow-hover:0 20px 60px rgba(0,0,0,0.35);
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  font-family:'Inter',sans-serif;
+  background: radial-gradient(circle at 20% 30%,#1e293b,#0f172a 70%);
+  color:#fff;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ================= HEADER ================= */
+
+header{
+  backdrop-filter:blur(18px);
+  background:var(--glass-bg);
+  border-bottom:1px solid var(--glass-border);
+  padding:22px 35px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+
+header h2{
+  font-weight:600;
+  font-size:20px;
+  letter-spacing:0.5px;
+}
+
+header span{
+  font-size:13px;
+  color:var(--text-light);
+}
+
+header button{
+  background:var(--danger);
+  border:none;
+  padding:8px 16px;
+  border-radius:var(--radius-sm);
+  color:#fff;
+  font-weight:500;
+  cursor:pointer;
+  transition:all 0.3s ease;
+}
+
+header button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 25px rgba(239,68,68,0.4);
+}
+
+/* ================= CONTAINER ================= */
+
+.container{
+  max-width:1300px;
+  margin:auto;
+  padding:40px 30px;
+}
+
+/* ================= EARNINGS ================= */
+
+.earnings-section{
+  background:var(--glass-bg);
+  backdrop-filter:blur(16px);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-lg);
+  padding:25px;
+  display:flex;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:25px;
+  margin-bottom:35px;
+  box-shadow:var(--shadow-soft);
+}
+
+.earnings-section strong{
+  font-size:13px;
+  color:var(--text-light);
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+
+.earnings-section span{
+  display:block;
+  margin-top:5px;
+  font-size:24px;
+  font-weight:700;
+  background:var(--primary-gradient);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.earnings-section select{
+  padding:10px 14px;
+  border-radius:var(--radius-sm);
+  border:none;
+  outline:none;
+  background:#fff;
+  font-weight:500;
+}
+
+/* ================= TABS ================= */
+
+.tabs{
+  display:flex;
+  gap:15px;
+  margin-bottom:30px;
+}
+
+.tab-btn{
+  padding:10px 20px;
+  border-radius:50px;
+  border:1px solid var(--glass-border);
+  background:var(--glass-bg);
+  color:#fff;
+  font-weight:500;
+  cursor:pointer;
+  transition:all 0.3s ease;
+}
+
+.tab-btn:hover{
+  background:rgba(255,255,255,0.15);
+  transform:translateY(-2px);
+}
+
+.tab-btn.active{
+  background:var(--primary-gradient);
+  border:none;
+  box-shadow:0 10px 30px rgba(59,130,246,0.4);
+}
+
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* ================= JOB GRID ================= */
+
+#assignedJobs,
+#acceptedJobs,
+#completedJobs{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:25px;
+}
+
+/* ================= JOB CARD ================= */
+
+.job-card{
+  background:var(--glass-bg);
+  backdrop-filter:blur(20px);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-lg);
+  padding:22px;
+  box-shadow:var(--shadow-soft);
+  transition:all 0.4s ease;
+  position:relative;
+  overflow:hidden;
+}
+
+.job-card::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:4px;
+  background:var(--primary-gradient);
+}
+
+.job-card:hover{
+  transform:translateY(-8px);
+  box-shadow:var(--shadow-hover);
+}
+
+.job-card h4{
+  font-size:17px;
+  font-weight:600;
+  margin-bottom:10px;
+}
+
+.job-card p{
+  font-size:13px;
+  color:var(--text-light);
+  margin-bottom:6px;
+}
+
+/* ================= STATUS BADGES ================= */
+
+.status{
+  padding:6px 12px;
+  border-radius:30px;
+  font-size:11px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  display:inline-block;
+  animation:fadeIn 0.4s ease;
+}
+
+.status.pending{background:var(--warning);color:#fff;}
+.status.accepted{background:var(--success);color:#fff;}
+.status.completed{background:var(--info);color:#fff;}
+
+/* ================= BUTTONS ================= */
+
+button.accept,
+button.complete{
+  margin-top:12px;
+  padding:9px 16px;
+  border:none;
+  border-radius:var(--radius-sm);
+  font-weight:500;
+  cursor:pointer;
+  transition:all 0.3s ease;
+}
+
+button.accept{
+  background:var(--success);
+  color:#fff;
+}
+
+button.accept:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 25px rgba(34,197,94,0.4);
+}
+
+button.complete{
+  background:var(--primary);
+  color:#fff;
+}
+
+button.complete:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 25px rgba(59,130,246,0.4);
+}
+
+/* ================= ANIMATIONS ================= */
+
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(5px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media(max-width:768px){
+  header{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:12px;
+  }
+
+  .tabs{
+    flex-direction:column;
+  }
+
+  .tab-btn{
+    width:100%;
+    text-align:center;
+  }
+
+  .earnings-section{
+    flex-direction:column;
+  }
+
+  button.accept,
+  button.complete{
+    width:100%;
+  }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h2>Technician Dashboard</h2>
+  <span id="techEmailDisplay"></span>
+  <button onclick="logout()">Logout</button>
+</header>
+
+<div class="container">
+
+  <!-- Earnings Display -->
+  <div class="earnings-section">
+    <div><strong>Technician Earnings:</strong> <span id="earningsDisplay">$0.00</span></div>
+    <div><strong>Admin Share:</strong> <span id="adminShareDisplay">$0.00</span></div>
+    <select id="earningPeriod" onchange="loadEarnings(); loadAdminShare();">
+      <option value="daily">Today</option>
+      <option value="weekly">This Week</option>
+      <option value="monthly">This Month</option>
+    </select>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('assignedJobsTab')">Jobs</button>
+    <button class="tab-btn" onclick="showTab('acceptedJobsTab')">Accepted Jobs</button>
+    <button class="tab-btn" onclick="showTab('completedJobsTab')">Completed Jobs</button>
+  </div>
+
+  <!-- Job Tabs -->
+  <div id="assignedJobsTab" class="tab-content active">
+    <div id="assignedJobs"></div>
+  </div>
+
+  <div id="acceptedJobsTab" class="tab-content">
+    <div id="acceptedJobs"></div>
+  </div>
+
+  <div id="completedJobsTab" class="tab-content">
+    <div id="completedJobs"></div>
+  </div>
+</div>
+
 <script>
-// Firebase
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyAGjRba9QmovE8MSlvJTPSkKp7OsdbiqBw",
   authDomain: "service-booking-app-56dea.firebaseapp.com",
@@ -146,225 +370,281 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// Auth
-firebase.auth().onAuthStateChanged(user=>{if(!user)window.location.href="../index.html";});
+let currentUserEmail = "";
+let currentUserDistrict = "";
 
-// Logout
-function logout(){firebase.auth().signOut().then(()=>window.location.href="../index.html");}
+firebase.auth().onAuthStateChanged(async user=>{
+  if(!user){ window.location.href="../index.html"; return; }
+  currentUserEmail = user.email.trim().toLowerCase();
+  document.getElementById("techEmailDisplay").innerText = currentUserEmail;
 
-// Tabs
-function showTab(id,btn){
-  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  if(id==='pendingJobsTab') loadPendingJobs();
-  if(id==='assignedJobsTab') loadAssignedJobs();
-  if(id==='techniciansTab') loadTechnicians();
-  if(id==='earningsTab') loadEarnings();
+  const userDoc = await db.collection("users").doc(user.uid).get();
+  const userData = userDoc.data() || {};
+  currentUserDistrict = userData.district || "";
+  
+  loadJobs();
+  loadEarnings();
+  loadAdminShare();
+});
+
+function logout(){
+  firebase.auth().signOut().then(()=>window.location.href="../index.html");
 }
 
-// Metrics
-function setupMetrics(){
-  db.collection("jobs").where("status","==","pending").onSnapshot(snap=>document.getElementById("pendingCount").innerText=snap.size);
-  db.collection("jobs").where("status","==","accepted").onSnapshot(snap=>document.getElementById("acceptedCount").innerText=snap.size);
-  db.collection("users").where("role","==","technician").onSnapshot(snap=>document.getElementById("techCount").innerText=snap.size);
-  db.collection("users").where("role","==","technician").where("adminDue",">",0).onSnapshot(snap=>document.getElementById("earningCount").innerText=snap.size);
-}
-setupMetrics();
+function showTab(tabId){
+  document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
 
-// Add Job
-function addJob(){
-  const title=document.getElementById("jobTitle").value.trim();
-  const district=document.getElementById("jobDistrict").value;
-  const address=document.getElementById("jobAddress").value;
-  const price=parseFloat(document.getElementById("jobPrice").value)||0;
-  const note=document.getElementById("jobNote").value.trim();
-  if(!title||!district){alert("Title & District required"); return;}
-  const jobId=db.collection("jobs").doc().id;
-  db.collection("jobs").doc(jobId).set({id:jobId,title,district,address,price,assignedTech:"",status:"pending",note,createdAt:firebase.firestore.FieldValue.serverTimestamp()})
-  .then(()=>{document.getElementById("jobTitle").value="";document.getElementById("jobDistrict").value="";document.getElementById("jobAddress").value="";document.getElementById("jobPrice").value="";document.getElementById("jobNote").value=""; alert("Job added successfully"); loadPendingJobs();});
+  document.querySelectorAll('.tab-btn').forEach(btn=>btn.classList.remove('active'));
+  event.currentTarget.classList.add('active');
 }
 
-// Pending Jobs
-function loadPendingJobs(){
-  const container=document.getElementById("pendingJobsContainer"); container.innerHTML="Loading...";
-  db.collection("jobs").where("status","==","pending").onSnapshot(snapshot=>{
-    container.innerHTML=""; 
-    if(snapshot.empty){container.innerHTML="<p>No pending jobs</p>"; return;}
-    snapshot.forEach(doc=>{
-      const j=doc.data(); 
-      const div=document.createElement("div"); div.className="job-card";
-      div.innerHTML=`<p><b>Title:</b> ${j.title}</p>
-                     <p><b>District:</b> ${j.district}</p>
-                     <p><b>Address:</b> ${j.address}</p>
-                     <p><b>Price:</b> ${j.price}</p>
-                     <p><b>Note:</b> ${j.note}</p>
-                     <select id="techSelect-${doc.id}"><option value="">Select Technician</option></select>
-                     <button class="assign" onclick="assignTech('${doc.id}')">Assign</button>`;
-      container.appendChild(div);
-      db.collection("users").where("role","==","technician").where("blocked","==",false).get().then(tsnap=>{
-        const sel=document.getElementById(`techSelect-${doc.id}`);
-        tsnap.forEach(tdoc=>{const t=tdoc.data(); sel.innerHTML+=`<option value="${t.name}">${t.name}</option>`;});
-      });
-    });
-  });
-}
-function assignTech(jobId){
-  const techName=document.getElementById(`techSelect-${jobId}`).value;
-  if(!techName){alert("Select technician"); return;}
-  db.collection("jobs").doc(jobId).update({assignedTech:techName,status:"accepted",assignedAt:firebase.firestore.FieldValue.serverTimestamp()});
-}
+// Accept / Reject Job
+async function respondJob(jobId, response) {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
 
-// Assigned Jobs
-function loadAssignedJobs(){
-  const container=document.getElementById("assignedJobsContainer"); container.innerHTML="Loading...";
-  db.collection("jobs").where("status","==","accepted").onSnapshot(snapshot=>{
-    container.innerHTML=""; 
-    if(snapshot.empty){container.innerHTML="<p>No assigned jobs</p>"; return;}
-    snapshot.forEach(doc=>{
-      const j=doc.data(); 
-      const div=document.createElement("div"); div.className="job-card";
-      div.innerHTML=`<p><b>Title:</b> ${j.title}</p>
-                     <p><b>District:</b> ${j.district}</p>
-                     <p><b>Address:</b> ${j.address}</p>
-                     <p><b>Price:</b> ${j.price}</p>
-                     <p><b>Note:</b> ${j.note}</p>
-                     <p><b>Technician:</b> ${j.assignedTech}</p>
-                     <button class="complete" onclick="completeJob('${doc.id}','${j.assignedTech}')">Mark Completed</button>`;
-      container.appendChild(div);
-    });
-  });
-}
-function completeJob(jobId,techName){
-  db.collection("jobs").doc(jobId).update({status:"completed"}).then(()=>{
-    const techRef=db.collection("users").where("name","==",techName).limit(1);
-    techRef.get().then(tsnap=>{tsnap.forEach(tdoc=>{tdoc.ref.update({adminDue:(tdoc.data().adminDue||0)+5});});});
-  });
-}
+  if (response === "accepted" && !confirm("Accept this job?")) return;
 
-// Technicians
-function loadTechnicians(){
-  const container=document.getElementById("techContainer"); container.innerHTML="Loading...";
-  db.collection("users").where("role","==","technician").onSnapshot(snapshot=>{
-    container.innerHTML=""; if(snapshot.empty){container.innerHTML="<p>No technicians</p>";return;}
-    snapshot.forEach(doc=>{
-      const t=doc.data(); const div=document.createElement("div"); div.className="tech-card";
-      div.innerHTML=`<p><b>Name:</b> ${t.name}</p>
-                     <p><b>Email:</b> ${t.email}</p>
-                     <p><b>Phone:</b> ${t.phone}</p>
-                     <p><b>Admin Due:</b> ${t.adminDue||0}</p>
-                     <p><b>Status:</b> ${t.blocked?"Blocked":"Active"}</p>
-                     <button class="block" onclick="toggleBlock('${doc.id}',${t.blocked})">${t.blocked?"Unblock":"Block"}</button>`;
-      container.appendChild(div);
-    });
-  });
-}
-function toggleBlock(docId,current){db.collection("users").doc(docId).update({blocked:!current});}
+  const jobRef = db.collection("jobs").doc(jobId);
+  const jobSnap = await jobRef.get();
+  if(!jobSnap.exists) return;
 
-// Earnings
-function loadEarnings(){
-  const container=document.getElementById("earningsContainer"); container.innerHTML="Loading...";
-  db.collection("users").where("role","==","technician").where("adminDue",">",0).onSnapshot(snapshot=>{
-    container.innerHTML=""; if(snapshot.empty){container.innerHTML="<p>No pending earnings</p>";return;}
-    snapshot.forEach(doc=>{
-      const t=doc.data(); const div=document.createElement("div"); div.className="tech-card";
-      div.innerHTML=`<p><b>Name:</b> ${t.name}</p>
-                     <p><b>Admin Due:</b> ${t.adminDue}</p>
-                     <button class="pay" onclick="approveEarning('${doc.id}')">Approve Payment</button>`;
-      container.appendChild(div);
-    });
-  });
-}
-function approveEarning(docId){db.collection("users").doc(docId).update({adminDue:0});}
+  const jobData = jobSnap.data();
+  const price = Number(jobData.price) || 0;
 
+  let updateObj = {
+    status: response,
+    technician: currentUserEmail
+  };
 
-// Register Account
-function togglePass(inputId, el) {
-  const input = document.getElementById(inputId);
-  if(input.type === "password") { 
-    input.type = "text"; 
-    el.innerText = "Hide"; 
-  } else { 
-    input.type = "password"; 
-    el.innerText = "Show"; 
+  if (response === "accepted") {
+    updateObj.assignedAt = firebase.firestore.FieldValue.serverTimestamp();
   }
+
+  await jobRef.update(updateObj);
+
+  if(response === "accepted"){
+    const techRef = db.collection("users").doc(user.uid);
+
+    // ✅ Fixed: Increment adminDue and earnings
+    await techRef.update({
+  "earnings.daily": firebase.firestore.FieldValue.increment(price * 0.9),
+  "earnings.weekly": firebase.firestore.FieldValue.increment(price * 0.9),
+  "earnings.monthly": firebase.firestore.FieldValue.increment(price * 0.9),
+  "adminDue": firebase.firestore.FieldValue.increment(price * 0.1)
+});
+
+
+    loadEarnings();
+    loadAdminShare();
+    showTab('acceptedJobsTab');
+  }
+
+  loadJobs();
 }
 
-document.getElementById("registerBtn").addEventListener("click", async () => {
-  const name = document.getElementById("regName").value.trim();
-  const email = document.getElementById("regEmail").value.trim().toLowerCase();
-  const password = document.getElementById("regPassword").value.trim();
-  const phone = document.getElementById("regPhone").value.trim();
-  const district = document.getElementById("regDistrict").value;
-  const role = document.getElementById("regRole").value;
+// Complete Job
+function completeJob(jobId){
+  if(!confirm("Mark this job as completed?")) return;
+  db.collection("jobs").doc(jobId).update({
+    status:"completed",
+    completedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(()=>loadJobs()).catch(err=>alert(err.message));
+}
 
-  // Validation
-  if(!name || !email || !password || (role === "technician" && !district)) {
-    alert("Please fill all required fields!");
+async function loadJobs() {
+  const assignedContainer = document.getElementById("assignedJobs");
+  const acceptedContainer = document.getElementById("acceptedJobs");
+  const completedContainer = document.getElementById("completedJobs");
+
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  const userDoc = await db.collection("users").doc(user.uid).get();
+  if (!userDoc.exists) return;
+
+  const techData = userDoc.data();
+  const currentUserEmail = user.email.toLowerCase();
+  //const currentUserDistrict = techData.district || "";
+
+  // ❌ If technician is blocked, stop
+  if (techData.blocked) {
+    assignedContainer.innerHTML = "<p class='job-card'>You are blocked by admin. Cannot view jobs.</p>";
+    acceptedContainer.innerHTML = "<p class='job-card'>You are blocked by admin. Cannot view jobs.</p>";
+    completedContainer.innerHTML = "<p class='job-card'>You are blocked by admin. Cannot view jobs.</p>";
     return;
   }
 
-  try {
-    // Create user in Firebase Auth
-    const userCred = await firebase.auth().createUserWithEmailAndPassword(email, password);
-    const uid = userCred.user.uid;
+  // =========================
+  // Assigned jobs (pending)
+  // =========================
+  db.collection("jobs")
+    .where("status", "==", "pending")
+    .onSnapshot(async snapshot => {
+      assignedContainer.innerHTML = "";
 
-    // Save user info in Firestore
-    await firebase.firestore().collection("users").doc(uid).set({
-      uid,
-      name,
-      email,
-      password,
-      phone,
-      district: role === "technician" ? district : "",
-      role,
-      blocked: false,
-      adminDue: 0,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      let jobsToShow = [];
+
+      for (const doc of snapshot.docs) {
+        const job = doc.data();
+
+        // ✅ Filter by district
+        if (job.district !== currentUserDistrict) continue;
+
+        // ✅ Skip if assigned to a blocked technician
+        if (job.technicianUid) {
+          const assignedTechDoc = await db.collection("users").doc(job.technicianUid).get();
+          if (assignedTechDoc.exists && assignedTechDoc.data().blocked) continue;
+        }
+
+        jobsToShow.push({ id: doc.id, ...job });
+      }
+
+      if (jobsToShow.length === 0) {
+        assignedContainer.innerHTML = "<p class='job-card'>No jobs available.</p>";
+        return;
+      }
+
+      jobsToShow.forEach(job => {
+        let createdOn = job.createdAt?.toDate?.() ? job.createdAt.toDate().toLocaleString() : "-";
+        const div = document.createElement("div");
+        div.className = "job-card";
+        div.innerHTML = `
+          <h4>Service: ${job.title}</h4>
+          <p><b>District:</b> ${job.district}</p>
+          <p><strong>Address:</strong> ${job.address}</p>
+          <p><strong>Price:</strong> $${job.price}</p>
+          <p><strong>Status:</strong> <span class="status pending">Pending</span></p>
+          <p><strong>Created On:</strong> ${createdOn}</p>
+          <button onclick="respondJob('${job.id}','accepted')" class="accept">Accept</button>
+          
+        `;
+        assignedContainer.appendChild(div);
+      });
     });
 
-    alert(`${role.charAt(0).toUpperCase() + role.slice(1)} account created successfully!`);
+  // =========================
+  // Accepted jobs
+  // =========================
+  db.collection("jobs")
+    .where("technician", "==", currentUserEmail)
+    .where("status", "==", "accepted")
+    .onSnapshot(snapshot => {
+      acceptedContainer.innerHTML = "";
 
-    // Clear form
-    document.getElementById("regName").value = "";
-    document.getElementById("regEmail").value = "";
-    document.getElementById("regPassword").value = "";
-    document.getElementById("regPhone").value = "";
-    document.getElementById("regDistrict").value = "";
-    document.getElementById("regRole").value = "technician";
+      if (snapshot.empty) {
+        acceptedContainer.innerHTML = "<p class='job-card'>No accepted jobs.</p>";
+        return;
+      }
 
-  } catch(err) {
-    // Improved error messages
-    if(err.code === "auth/email-already-in-use") {
-      alert("This email is already in use.");
-    } else if(err.code === "auth/invalid-email") {
-      alert("Invalid email format.");
-    } else if(err.code === "auth/weak-password") {
-      alert("Password should be at least 6 characters.");
-    } else {
-      alert("Error: " + err.message);
-    }
-    console.error(err);
-  }
-});
-function approveEarning(docId){
-  const docRef = db.collection("users").doc(docId);
+      snapshot.docs.forEach(doc => {
+        const job = doc.data();
+        const div = document.createElement("div");
+        div.className = "job-card";
+        let assignedOn = job.assignedAt?.toDate?.() ? job.assignedAt.toDate().toLocaleString() : "-";
+        div.innerHTML = `
+          <h4>Service: ${job.title}</h4>
+          <p><b>District:</b> ${job.district}</p>
+          <p><strong>Address:</strong> ${job.address}</p>
+          <p><strong>Price:</strong> $${job.price}</p>
+          <p><strong>Status:</strong> <span class="status accepted">Accepted</span></p>
+          <p><strong>Assigned On:</strong> ${assignedOn}</p>
+          <button onclick="completeJob('${doc.id}')" class="complete">Mark as Completed</button>
+        `;
+        acceptedContainer.appendChild(div);
+      });
+    });
 
-  // Update Firestore
-  docRef.update({adminDue:0}).then(() => {
-    // Update UI immediately by removing that card
-    const container = document.getElementById("earningsContainer");
-    const card = container.querySelector(`.tech-card button[onclick="approveEarning('${docId}')"]`).parentElement;
-    if(card) container.removeChild(card);
+  // =========================
+  // Completed jobs
+  // =========================
+  db.collection("jobs")
+    .where("technician", "==", currentUserEmail)
+    .where("status", "==", "completed")
+    .onSnapshot(snapshot => {
+      completedContainer.innerHTML = "";
 
-    // Optional: Show message
-    alert("Payment approved! Admin Due reset to 0.");
-  }).catch(err => {
-    console.error(err);
-    alert("Error approving payment: " + err.message);
-  });
+      if (snapshot.empty) {
+        completedContainer.innerHTML = "<p class='job-card'>No completed jobs.</p>";
+        return;
+      }
+
+      snapshot.docs.forEach(doc => {
+        const job = doc.data();
+        const div = document.createElement("div");
+        div.className = "job-card";
+        let assignedOn = job.assignedAt?.toDate?.() ? job.assignedAt.toDate().toLocaleString() : "-";
+        let completedOn = job.completedAt?.toDate?.() ? job.completedAt.toDate().toLocaleString() : "-";
+        div.innerHTML = `
+          <h4>Service: ${job.title}</h4>
+          <p><b>District:</b> ${job.district}</p>
+          <p><strong>Address:</strong> ${job.address}</p>
+          <p><strong>Price:</strong> $${job.price}</p>
+          <p><strong>Status:</strong> <span class="status completed">Completed</span></p>
+          <p><strong>Assigned On:</strong> ${assignedOn}</p>
+          <p><strong>Completed On:</strong> ${completedOn}</p>
+        `;
+        completedContainer.appendChild(div);
+      });
+    });
 }
+
+
+// Load Earnings
+async function loadEarnings(){
+  const user = firebase.auth().currentUser;
+  if(!user) return;
+  const period = document.getElementById("earningPeriod").value;
+  try{
+    const snap = await db.collection("users").doc(user.uid).get();
+    const data = snap.data() || {};
+    const earnings = data.earnings || {};
+    const amount = earnings[period] || 0;
+    document.getElementById("earningsDisplay").innerText = "₨" + Number(amount).toFixed(2);
+  }catch(err){
+    console.error(err);
+    document.getElementById("earningsDisplay").innerText = "₨0.00";
+  }
+}
+
+// Load Admin Share for current user only
+// Real-time listener for adminDue updates
+// Technician dashboard – listen to current user's document
+firebase.auth().onAuthStateChanged(async user=>{
+  if(!user){ 
+    window.location.href="../index.html"; 
+    return; 
+  }
+
+  currentUserEmail = user.email.trim().toLowerCase();
+  document.getElementById("techEmailDisplay").innerText = currentUserEmail;
+
+  const userRef = db.collection("users").doc(user.uid);
+
+  // ✅ REAL-TIME LISTENER (FIXED)
+  userRef.onSnapshot(docSnap => {
+    if(docSnap.exists){
+      const data = docSnap.data();
+      const adminDue = data.adminDue || 0;
+
+      document.getElementById("adminShareDisplay").innerText =
+        "₨" + Number(adminDue).toFixed(2);
+
+      const earnings = data.earnings || {};
+      const period = document.getElementById("earningPeriod").value;
+      const amount = earnings[period] || 0;
+
+      document.getElementById("earningsDisplay").innerText =
+        "₨" + Number(amount).toFixed(2);
+    }
+  });
+
+  loadJobs();
+});
+
+
+
 
 </script>
 </body>
