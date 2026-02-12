@@ -83,6 +83,7 @@ button.submit:hover, button.assign:hover, button.complete:hover, button.block:ho
   <option>Puttalam</option><option>Anuradhapura</option><option>Polonnaruwa</option>
   <option>Badulla</option><option>Monaragala</option><option>Ratnapura</option><option>Kegalle</option>
 </select>
+<input type="text" id="jobAddress" placeholder="Address">
 <input type="number" id="jobPrice" placeholder="Price (LKR)">
 <textarea id="jobNote" placeholder="Additional Note"></textarea>
 <button class="submit" onclick="addJob()">Add Job</button>
@@ -146,10 +147,10 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // Auth
-//firebase.auth().onAuthStateChanged(user=>{if(!user)window.location.href="../login.html";});
+firebase.auth().onAuthStateChanged(user=>{if(!user)window.location.href="../index.html";});
 
 // Logout
-function logout(){firebase.auth().signOut().then(()=>window.location.href="../login.html");}
+function logout(){firebase.auth().signOut().then(()=>window.location.href="../index.html");}
 
 // Tabs
 function showTab(id,btn){
@@ -176,12 +177,13 @@ setupMetrics();
 function addJob(){
   const title=document.getElementById("jobTitle").value.trim();
   const district=document.getElementById("jobDistrict").value;
+  const address=document.getElementById("jobAddress").value;
   const price=parseFloat(document.getElementById("jobPrice").value)||0;
   const note=document.getElementById("jobNote").value.trim();
   if(!title||!district){alert("Title & District required"); return;}
   const jobId=db.collection("jobs").doc().id;
-  db.collection("jobs").doc(jobId).set({id:jobId,title,district,price,assignedTech:"",status:"pending",note,createdAt:firebase.firestore.FieldValue.serverTimestamp()})
-  .then(()=>{document.getElementById("jobTitle").value="";document.getElementById("jobDistrict").value="";document.getElementById("jobPrice").value="";document.getElementById("jobNote").value=""; alert("Job added successfully"); loadPendingJobs();});
+  db.collection("jobs").doc(jobId).set({id:jobId,title,district,address,price,assignedTech:"",status:"pending",note,createdAt:firebase.firestore.FieldValue.serverTimestamp()})
+  .then(()=>{document.getElementById("jobTitle").value="";document.getElementById("jobDistrict").value="";document.getElementById("jobAddress").value="";document.getElementById("jobPrice").value="";document.getElementById("jobNote").value=""; alert("Job added successfully"); loadPendingJobs();});
 }
 
 // Pending Jobs
@@ -195,6 +197,7 @@ function loadPendingJobs(){
       const div=document.createElement("div"); div.className="job-card";
       div.innerHTML=`<p><b>Title:</b> ${j.title}</p>
                      <p><b>District:</b> ${j.district}</p>
+                     <p><b>Address:</b> ${j.address}</p>
                      <p><b>Price:</b> ${j.price}</p>
                      <p><b>Note:</b> ${j.note}</p>
                      <select id="techSelect-${doc.id}"><option value="">Select Technician</option></select>
@@ -224,6 +227,7 @@ function loadAssignedJobs(){
       const div=document.createElement("div"); div.className="job-card";
       div.innerHTML=`<p><b>Title:</b> ${j.title}</p>
                      <p><b>District:</b> ${j.district}</p>
+                     <p><b>Address:</b> ${j.address}</p>
                      <p><b>Price:</b> ${j.price}</p>
                      <p><b>Note:</b> ${j.note}</p>
                      <p><b>Technician:</b> ${j.assignedTech}</p>
@@ -344,7 +348,24 @@ document.getElementById("registerBtn").addEventListener("click", async () => {
     console.error(err);
   }
 });
+function approveEarning(docId){
+  const docRef = db.collection("users").doc(docId);
+
+  // Update Firestore
+  docRef.update({adminDue:0}).then(() => {
+    // Update UI immediately by removing that card
+    const container = document.getElementById("earningsContainer");
+    const card = container.querySelector(`.tech-card button[onclick="approveEarning('${docId}')"]`).parentElement;
+    if(card) container.removeChild(card);
+
+    // Optional: Show message
+    alert("Payment approved! Admin Due reset to 0.");
+  }).catch(err => {
+    console.error(err);
+    alert("Error approving payment: " + err.message);
+  });
+}
+
 </script>
 </body>
 </html>
-
